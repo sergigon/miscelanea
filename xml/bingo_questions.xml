@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+
+<!--- List of questions used in Bingo skill -->
+<bingo_questions>
+
+  <question type="start">
+      <etts type="es">"Estoy segura de que conoces las instrucciones pero ¿quieres que te las recuerde?"</etts>
+      <etts type="en">hello</etts>
+      <grammar>si_no.gram</grammar>
+      <answer_id>sino</answer_id>
+  </question>
+
+   <question type="choose_card">
+      <etts>"¿Que cartón has elegido? | ¿Cuál has elegido?"</etts>
+      <grammar>session_grammars/numbers.gram</grammar>
+      <answer_id>session_command</answer_id>
+  </question>
+
+  <question type="exit">
+      <etts>"¿Quieres salir del juego? | ¿Quieres que dejemos el juego?"</etts>
+      <grammar>si_no.gram</grammar>
+      <answer_id>sino</answer_id>
+  </question>
+
+  <question type="ask_to_continue">
+      <etts>"¿Quieres continuar con el juego? | ¿%name? ¿sigues ahí? | ¿Quieres que continuemos? | ¿Te apetece seguir con el juego?"</etts>
+      <grammar>si_no.gram</grammar>
+      <answer_id>sino</answer_id>
+  </question>
+
+</bingo_questions>

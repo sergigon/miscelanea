@@ -26,8 +26,8 @@ from interaction_msgs.msg import CA
 from hri_manager.key_value_pairs import to_dict
 
 # Local libraries
-from weather_skill.ca_functions import *
-from weather_skill.exceptions_lib import PauseException, ErrorException
+from skillName.ca_functions import *
+from skillName.exceptions_lib import PauseException, ErrorException
 
 # Skill variables
 # Package name
@@ -58,21 +58,8 @@ class SkillNameSkill(Skill):
 
         # Class variables
         self._as = None # SimpleActionServer variable
-        self._answer_received = '' # CA answer received
-
-        # Goal control variables
-        self._goal_exec = False # Indicates if goal is being handled
-        self._pause_requested = False # Indicates if pause is requested
-        self._pause = False # Indicates if pause
-        self._step = '' # Indicates new process step
-        self._exec_out = True # Indicates goal exec loop exit
         
-        # Goal varaibles
-        self._max_time,  self._time_run = 0, 0 # Max time to handle the goal; time running handling goal
-        self._t0, self._t1 = 0, 0 # Variables to update self._time_run
-        self._number_plays, self._i_plays = 0, 0 # Max number of plays to handle the goal; plays handling goal
-        self._limit_method = '' # Indicates limit method selected (max time, plays or both)
-        self._time_question = 10000 # Time to make a proactivity question
+        self.init_variables() # Init variables
 
         # Local paths
         rospack = rospkg.RosPack()
@@ -88,11 +75,33 @@ class SkillNameSkill(Skill):
         # init the skill
         Skill.__init__(self, skill_name, CONDITIONAL)
 
+    def init_variables(self):
+        """
+        Initialization of variables
+        """
+
+        # Goal control variables
+        self._goal_exec = False # Indicates if goal is being handled
+        self._pause_requested = False # Indicates if pause is requested
+        self._pause = False # Indicates if pause
+        self._step = '' # Indicates new process step
+        self._exec_out = True # Indicates goal exec loop exit
+        
+        # Goal varaibles
+        self._max_time,  self._time_run = 0, 0 # Max time to handle the goal; time running handling goal
+        self._t0, self._t1 = 0, 0 # Variables to update self._time_run
+        self._number_plays, self._i_plays = 0, 0 # Max number of plays to handle the goal; plays handling goal
+        self._limit_method = '' # Indicates limit method selected (max time, plays or both)
+        self._time_question = 10000 # Time to make a proactivity question
+
+        # CA variables
+        self._answer_received = '' # CA answer received
+
 ######################### Skill callbacks #########################
     def response_callback(self, recog_response):
         """
         Receive the response from hri manager.
-        Translate the response into a server param
+        Translate the response into a server param.
         """
 
         if(recog_response.emitter == self._emitter):
@@ -221,7 +230,6 @@ class SkillNameSkill(Skill):
 	        while(self._pause and not self._as.is_preempt_requested()):
 	            rospy.logdebug('waiting...')
 	            rospy.sleep(1)
-
     
     def _goal_handler(self, goal):
         """
@@ -303,31 +311,27 @@ class SkillNameSkill(Skill):
         @param goal: weather_skill goal.
         """
 
-        # Goal control variables
-        self._pause_requested = False
-        self._pause = False
-        self._step = 'Process_goal'
-        self._exec_out = False
+        # Init skill variables
+        self.init_variables()
 
-        # Goal variables
-        self._time_run, self._i_plays = 0, 0
-        self._t0, self._t1 = 0, 0 # Variables to update self._time_run
-        self._limit_method = ''
-        n_questions = 1 # Variable to indicate the number of continue questions
-
-        # Result default values
+        # Init result and feedback
+        # -- Result default values -- #
         self._result.skill_result = self._result.SUCCESS # Success
-
-        # Feedback default values
+        # -- Feedback default values -- #
         self._feedback.app_status = 'start_ok'
         self._feedback.percentage_completed = 0
         self._feedback.engagement = True
-        # Publish initial feedback
+        # -- Publish initial feedback -- #
         self._as.publish_feedback(self._feedback)
 
         ####################### Skill active #######################
         if self._status == self.RUNNING:
+            #################### Init variables ####################
             self._goal_exec = True # Goal execution starts
+            self._step = 'Process_goal' # Next goal exec step
+            self._exec_out = False # Enters the loop
+            n_questions = 1 # Variable to indicate the number of continue questions
+            #======================================================#
             print('\n')
             rospy.loginfo("RUNNING...")
             ###################### Exec loop #######################
@@ -440,7 +444,7 @@ class SkillNameSkill(Skill):
         ##################### Skill NOT active #####################
         else:
             rospy.logwarn("STOPPED")
-            rospy.logwarn("[%s] Cannot send a goal when the skill is stopped" % pkg_name)
+            rospy.logwarn("Cannot send a goal when the skill is stopped")
             self._result.skill_result = self._result.FAIL # Error
         #==========================================================#
         
@@ -459,7 +463,6 @@ class SkillNameSkill(Skill):
         rospy.loginfo("######## Result sent ########")
         rospy.loginfo("#############################")
         #==========================================================#
-
 
 
 if __name__ == '__main__':
