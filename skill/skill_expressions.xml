@@ -5,13 +5,13 @@
 
 	<expression type="exit">
 		<language type="es">
-			<etts>Vale, lo dejamos | Okey, paramos ya</etts>
+			<etts>Vale, \\pause=600 lo dejamos | Okey, \\pause=600 paramos ya</etts>
 			<grammar>si_no.gram</grammar>
 			<answer_id>sino</answer_id>
 		</language>
 
 		<language type="en">
-			<etts>Okey, we leave it | Okey, we stop</etts>
+			<etts>Okey, \\pause=600 we leave it | Okey, \\pause=600 we stop</etts>
 			<grammar>si_no.gram</grammar>
 			<answer_id>sino</answer_id>
 		</language>

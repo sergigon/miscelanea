@@ -18,12 +18,12 @@
 
 	<question type="ask_to_continue">
 		<language type="es">
-			<etts>¿Quieres continuar? |¿%name? ¿sigues ahí? |¿Quieres que continuemos? |¿Te apetece seguir?</etts>
+			<etts>¿Quieres continuar? |¿%name? \\pause=500 ¿sigues ahí? |¿Quieres que continuemos? |¿Te apetece seguir?</etts>
 			<grammar>si_no.gram</grammar>
 			<answer_id>sino</answer_id>
 		</language>
 		<language type="en">
-			<etts>Do you want to continue? |%name? Are you still there? </etts>
+			<etts>Do you want to continue? |%name? \\pause=500 Are you still there? </etts>
 			<grammar>si_no.gram</grammar>
 			<answer_id>sino</answer_id>
 		</language>

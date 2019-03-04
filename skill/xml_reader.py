@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # +*+ coding: utf+8 +*+
 
-import xml.etree.ElementTree as ET 			# To read xml file (questions and sentences)
+import xml.etree.ElementTree as ET # To read xml file (questions and sentences)
 from ca_functions import *
 
 def Test(question_type):
@@ -32,7 +32,7 @@ def Test(question_type):
 	print ('Question: %s\nGrammar: %s\nAnswer id: %s' % (etts.encode("utf-8"), grammar, answer_id))					
 	print(etts)
 
-def GetQuestion(question_type, language):
+def GetQuestion(question_type, language, name=''):
 	"""
 	@brief: Get a question from 'skill_question.xml'
 	@param string question_type: kind of question
@@ -45,12 +45,15 @@ def GetQuestion(question_type, language):
 	question = root.find(question_info_path) # Find the question type
 	etts = question.find('etts').text
 	etts = etts.encode("utf-8")
+	etts = etts.replace('%name', name) # Introduce the user's name
 	grammar = question.find('grammar').text
 	answer_id = question.find('answer_id').text
 
 	print ('Question: %s\nGrammar: %s\nAnswer id: %s' % (etts, grammar, answer_id))
 
-def GetExpression(question_type, language):
+	return etts, grammar, answer_id
+
+def GetExpression(question_type, language, name=''):
 	"""
 	@brief: Get a question from 'skill_question.xml'
 	@param string question_type: kind of question
@@ -63,10 +66,13 @@ def GetExpression(question_type, language):
 	question = root.find(question_info_path) # Find the question type
 	etts = question.find('etts').text
 	etts = etts.encode("utf-8")
+	etts = etts.replace('%name', name) # Introduce the user's name
 	grammar = question.find('grammar').text
 	answer_id = question.find('answer_id').text
 
 	print ('Question: %s\nGrammar: %s\nAnswer id: %s' % (etts, grammar, answer_id))
+
+	return etts, grammar, answer_id
 
 GetQuestion('exit', 'en')
 GetExpression('exit', 'en')

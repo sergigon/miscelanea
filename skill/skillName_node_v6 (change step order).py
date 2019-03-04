@@ -26,6 +26,7 @@ from interaction_msgs.msg import CA
 from hri_manager.key_value_pairs import to_dict
 
 # Local libraries
+from skillName.xml_reader import GetQuestion, GetExpression
 from skillName.ca_functions import *
 from skillName.exceptions_lib import PauseException, ErrorException
 
@@ -50,6 +51,7 @@ class SkillNameSkill(Skill):
 
     # Params constants
     _LANG_PARAM = 'context/user/language'
+    _USER_NAME_PARAM = 'context/user/name'
 
 
     def __init__(self):
@@ -195,7 +197,7 @@ class SkillNameSkill(Skill):
     def update_list_ca(ca_name):
         self._list_ca.append(ca_name)
 
-    def exception_check(self, deactivation = [], t0 = -1, t1 = -1):
+    def exception_check(self):
         """
         Checks if an exception has been asked. It can be by a preempt request or by a pause request.
 
@@ -204,18 +206,6 @@ class SkillNameSkill(Skill):
         @param t1: Time 1 to use for time_run (if exception requested)
         """
 
-        # Parameters update
-        if(self._pause_requested or self._as.is_preempt_requested()):
-            # CA deactivation
-            if(len(deactivation)>0):
-                for msg_name in deactivation:
-                    rospy.logdebug('Deactivating CA: %s' % ca_name)
-                    msg = deactivateCA(ca_name)
-                    self.ca_deactivation_pub.publish(msg_name)
-            # Time update
-            if(t0!=-1 and t1!=-1):
-                self._time_run += t1 - t0
-
         # Raise exceptions
         ############# State Preempted checking #############
         # If goal is in Preempted state (that is, there    #
@@ -223,11 +213,10 @@ class SkillNameSkill(Skill):
         # cancelled), the exception is activated.          #
         ####################################################
         if(self._as.is_preempt_requested()):
-            self._pause_requested = False
             rospy.logwarn("Preempt requested")
             raise ActionlibException
         
-        ###################### Pause #######################
+        ############### State Pause checking ###############
         if(self._pause_requested):
             self._pause_requested = False
             self._pause = True
@@ -241,6 +230,10 @@ class SkillNameSkill(Skill):
 
         if(self._pause and not self._as.is_preempt_requested()):
 	        rospy.loginfo('Start waiting')
+            # Send feedback
+            self._feedback.app_status = 'pause_ok'
+            self._as.publish_feedback(self._feedback)
+            # Wait loop
 	        while(self._pause and not self._as.is_preempt_requested()):
 	            rospy.logdebug('waiting...')
 	            rospy.sleep(1)
@@ -340,11 +333,19 @@ class SkillNameSkill(Skill):
                 rospy.logwarn("Language not found. Using language %s" % language)
             return langauge
 
+        # Language
+        if(param_name == 'user_name'):
+            try:
+                user_name = rospy.get_param(self._USER_NAME_PARAM) # Get user name
+            except:
+                user_name = ''
+                rospy.logwarn("User name not found. Using empty name")
+            return user_name
+
         # Unknow param name
         else:
             rospy.logerr("Param name '%s' not found. %s" % param_name)
             return -1
-
 
     def execute_cb(self, goal):
         """
@@ -355,9 +356,6 @@ class SkillNameSkill(Skill):
 
         # Init skill variables
         self.init_variables()
-
-        # Get langauge
-        language = self.get_param('langauge')
 
         # Init result and feedback
         # -- Result default values -- #
@@ -393,7 +391,16 @@ class SkillNameSkill(Skill):
             while(not self._exec_out and self._feedback.percentage_completed<100):
                 try:
                     # Wait loop
-                    self.pause_wait() # It pauses if it is asked
+                    self.pause_wait() # It pauses if it asked
+
+                    # Exception check
+                    self.exception_check() # If requested, it raises exception, else, it continues
+
+                    # Get params
+                    language = self.get_param('langauge')
+                    user_name = self.get_param('user_name')
+                    # Empty feedback status
+                    self._feedback.app_status = ''
 
                     # Restart timer
                     self.restart_timer()
@@ -403,6 +410,7 @@ class SkillNameSkill(Skill):
                         rospy.loginfo("Step0")
                         # Make step 0 stuff
                         # ...
+                        # Next step
                         self._step = 'Step1'
 
                     # Step 1
@@ -410,6 +418,7 @@ class SkillNameSkill(Skill):
                         rospy.loginfo("Step1")
                         # Make step 1 stuff
                         # ...
+                        # Next step
                         self._step = 'StepFinal'
 
                     # Step error
@@ -426,12 +435,16 @@ class SkillNameSkill(Skill):
                         # Update limit variables
                         self._i_plays += 1
                         self.update_percentage()
-                        
+                        # Next step
+                        self._step = 'Step0'
+
+                        # Exit question
                         if(self._feedback.percentage_completed<100):
                             # Asks when a time has passed
                             if(self._time_run > self._time_question * n_questions):
                                 # Continue question
-                                ca_info = makeCA_ASR_question(etts_text='¿Quieres continuar?', language=str(language), grammar = "si_no.gram", answer_id = 'sino', emitter=self._emitter)
+                                etts_text, grammar, answer_id = GetQuestion('exit', language, user_name)
+                                ca_info = makeCA_ASR_question(etts_text=etts_text, language=language, grammar = grammar, answer_id = answer_id, emitter=self._emitter)
                                 self.update_list_ca(ca_info)
                                 self.ca_pub.publish(ca_info)
                                 # Wait answer
@@ -445,7 +458,10 @@ class SkillNameSkill(Skill):
                                 if(self._answer_received == 'si'): # Continue
                                     self._feedback.engagement = True
                                 elif(self._answer_received == 'no'): # Stops skill
-                                    ca_info = makeCA_ASR_question(etts_text='Vale \\pause=600 lo dejamos', language=str(language), grammar = "si_no.gram", answer_id = 'sino', emitter=self._emitter)
+                                    # Send CA info
+                                    etts_text, grammar, answer_id = GetExpression('exit', language, user_name)
+                                    ca_info = makeCA_etts_info(etts_text=etts_text, language=language, grammar=grammar, answer_id=answer_id, emitter=self._emitter)
+                                    self.update_list_ca(ca_info)
                                     self.ca_pub.publish(ca_info)
                                     # Wait finish CA
                                     # ...
@@ -455,8 +471,8 @@ class SkillNameSkill(Skill):
                                 # Update number of questions
                                 n_questions += 1
 
-                            self._step = 'Step0'
-                        
+                    # Exception check
+                    self.exception_check() # If requested, it raises exception, else, it continues
 
                 #################### Exceptions ####################
                 ### Preempted or cancel:
@@ -484,12 +500,12 @@ class SkillNameSkill(Skill):
                 except PauseException:
                     rospy.logwarn('Paused')
                     rospy.loginfo('Next step: %s' % self._step)
-                    # Feedback
-                    self._feedback.app_status = 'pause_ok'
                     # Exec loop variable
                     self._exec_out = False
                 #=================== Exceptions ===================#
-
+                # Deactivate ca list
+                self.deactivate_ca_list()
+                
                 # Publish feedback at the end of loop
                 self._as.publish_feedback(self._feedback)
 
@@ -504,8 +520,6 @@ class SkillNameSkill(Skill):
             rospy.logwarn("Cannot send a goal when the skill is stopped")
             self._result.skill_result = self._result.FAIL # Error
         #==========================================================#
-        # Deactivate ca list
-        self.deactivate_ca_list()
         
         #### Result and feedback sending and goal status update ####
         if self._result.skill_result == self._result.SUCCESS:

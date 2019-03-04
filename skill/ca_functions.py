@@ -18,7 +18,7 @@ from interaction_msgs.msg import CA
 from common_msgs.msg import KeyValuePair as kvpa
 
 ############################### Giving info CA functions ###############################
-def makeCA_info(etts_text = None, gesture = None, image_url = None, tablet_type= None, priority=1, duration=0, emitter=''):
+def makeCA_info(etts_text=None, language='es', gesture=None, image_url=None, tablet_type=None, priority=1, duration=0, emitter=''):
     '''
     Creates info CA.
     '''
@@ -34,6 +34,11 @@ def makeCA_info(etts_text = None, gesture = None, image_url = None, tablet_type=
         kvp = kvpa()
         kvp.key = "etts_text"
         kvp.value = etts_text
+        msg.values.append(kvp)
+
+        kvp = kvpa()
+        kvp.key = "etts_language"
+        kvp.value = language
         msg.values.append(kvp)
 
     if gesture:
@@ -57,12 +62,12 @@ def makeCA_info(etts_text = None, gesture = None, image_url = None, tablet_type=
 
     return msg
 
-def makeCA_etts_info(etts_text, priority=1, duration=0, emitter=''):
+def makeCA_etts_info(etts_text, language='es', priority=1, duration=0, emitter=''):
     '''
     Creates etts info CA.
     '''
 
-    msg = makeCA_info(etts_text=etts_text, priority=priority, duration=duration, emitter=emitter)
+    msg = makeCA_info(etts_text=etts_text, language=language, priority=priority, duration=duration, emitter=emitter)
 
     rospy.logdebug("Created CA etts info")
 
