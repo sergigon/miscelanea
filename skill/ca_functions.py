@@ -18,14 +18,14 @@ from interaction_msgs.msg import CA
 from common_msgs.msg import KeyValuePair as kvpa
 
 ############################### Giving info CA functions ###############################
-def makeCA_info(etts_text=None, language='es', gesture=None, image_url=None, tablet_type=None, priority=1, duration=0, emitter=''):
+def makeCA_info(etts_text=None, language='es', gesture=None, image_url=None, tablet_type=None, priority=1, duration=0, emitter='', type_ca=''):
     '''
     Creates info CA.
     '''
 
     msg = CA()
     msg.type = "robot_giving_info"
-    msg.ca_name = str(time.time())
+    msg.ca_name = str(rospy.get_rostime().nsecs)
     msg.duration = duration
     msg.priority = priority
     msg.emitter = emitter
@@ -58,7 +58,7 @@ def makeCA_info(etts_text=None, language='es', gesture=None, image_url=None, tab
         kvp.value = image_url
         msg.values.append(kvp)
 
-    rospy.logdebug("Created CA info")
+    rospy.logdebug("Created CA %s info %s" % (type_ca, msg.ca_name))
 
     return msg
 
@@ -67,9 +67,7 @@ def makeCA_etts_info(etts_text, language='es', priority=1, duration=0, emitter='
     Creates etts info CA.
     '''
 
-    msg = makeCA_info(etts_text=etts_text, language=language, priority=priority, duration=duration, emitter=emitter)
-
-    rospy.logdebug("Created CA etts info")
+    msg = makeCA_info(etts_text=etts_text, language=language, priority=priority, duration=duration, emitter=emitter, type_ca='etts')
 
     return msg
 
@@ -78,9 +76,7 @@ def makeCA_tablet_info(image_url, tablet_type, priority=1, duration=0, emitter='
     Creates tablet info CA.
     '''
 
-    msg = makeCA_info(image_url=image_url, tablet_type=tablet_type, priority=priority, duration=duration, emitter=emitter)
-
-    rospy.logdebug("Created CA tablet info")
+    msg = makeCA_info(image_url=image_url, tablet_type=tablet_type, priority=priority, duration=duration, emitter=emitter, type_ca='tablet')
 
     return msg
 
@@ -89,9 +85,7 @@ def makeCA_defaultImage(duration=0, priority=1, emitter=""):
     Creates default tablet image CA.
     '''
 
-    msg = makeCA_tablet_info(image_url='image/default_images/default_2.png', tablet_type='image', priority=priority, duration=duration, emitter=emitter)
-
-    rospy.logdebug("Created CA tablet default image")
+    msg = makeCA_tablet_info(image_url='image/default_images/default_2.png', tablet_type='image', priority=priority, duration=duration, emitter=emitter, type_ca='tablet default')
 
     return msg
 
@@ -100,9 +94,7 @@ def makeCA_gesture_info(gesture, priority=1, duration=0, emitter=''):
     Creates gesture info CA.
     '''
 
-    msg = makeCA_info(gesture=gesture, priority=priority, duration=duration, emitter=emitter)
-
-    rospy.logdebug("Created CA gesture info")
+    msg = makeCA_info(gesture=gesture, priority=priority, duration=duration, emitter=emitter, type_ca='gesture')
 
     return msg
 #======================================================================================#
@@ -110,14 +102,14 @@ def makeCA_gesture_info(gesture, priority=1, duration=0, emitter=''):
 ############################### Asking info CA functions ###############################
 def makeCA_question(answer_type, answer_id='', answer_time=0, answer_attempts=2, grammar=None,
     etts_text=None, language='es', image_url=None, tablet_type=None, gesture=None, menu_value=None, menu_type=None,
-    duration=0, priority=1, emitter=""):
+    duration=0, priority=1, emitter="", type_ca=''):
     '''
     Creates question CA.
     '''
 
     msg = CA()
     msg.type = "robot_asking_for_info"
-    msg.ca_name = str(time.time())
+    msg.ca_name = str(rospy.get_rostime().nsecs)
     msg.duration = duration
     msg.priority = priority
     msg.emitter = emitter
@@ -192,7 +184,7 @@ def makeCA_question(answer_type, answer_id='', answer_time=0, answer_attempts=2,
     msg.values.append(kvp)
     #=================#
 
-    rospy.logdebug("Creating CA question")
+    rospy.logdebug("Creating CA %s question %s" % (type_ca, msg.ca_name))
 
     return msg
 
@@ -205,9 +197,7 @@ def makeCA_ASR_question(etts_text, grammar, answer_id, language='es', image_url=
 
     msg = makeCA_question(answer_type='ASR', grammar=grammar, answer_id=answer_id, answer_time=answer_time, answer_attempts=answer_attempts,
         etts_text=etts_text, language=language, image_url=image_url, tablet_type=tablet_type, gesture=gesture,
-        duration=duration, priority=priority, emitter=emitter)
-
-    rospy.logdebug("Created CA ASR question")
+        duration=duration, priority=priority, emitter=emitter, type_ca='ASR')
 
     return msg
 
@@ -220,9 +210,7 @@ def makeCA_tablet_question(menu_value, menu_type, etts_text=None, language='es',
 
     msg = makeCA_question(answer_type='tablet_menu', answer_id='tablet_answer', answer_time=answer_time, answer_attempts=answer_attempts,
         etts_text=etts_text, language=language, gesture=gesture, menu_value=menu_value, menu_type=menu_type,
-        duration=duration, priority=priority, emitter=emitter)
-
-    rospy.logdebug("Creating CA tablet question")
+        duration=duration, priority=priority, emitter=emitter, type_ca='tablet')
 
     return msg
 
@@ -235,9 +223,7 @@ def makeCA_touch_question(etts_text=None, language='es', image_url=None, tablet_
 
     msg = makeCA_question(answer_type='touch', answer_id='touch_answer', answer_time=answer_time, answer_attempts=answer_attempts,
         etts_text=etts_text, language=language, image_url=image_url, tablet_type=tablet_type, gesture=gesture,
-        duration=duration, priority=priority, emitter=emitter)
-
-    rospy.logdebug("Creating CA touch question")
+        duration=duration, priority=priority, emitter=emitter, type_ca='touch')
 
     return msg
 
@@ -248,9 +234,7 @@ def makeCA_ASR_listen(grammar, answer_id, answer_time=10, answer_attempts=1,
     '''
 
     msg = makeCA_question(answer_type='ASR', grammar=grammar, answer_id=answer_id, answer_time=answer_time, answer_attempts=answer_attempts,
-        duration=duration, priority=priority, emitter=emitter)
-
-    rospy.logdebug("Creating CA ASR listen")
+        duration=duration, priority=priority, emitter=emitter, type_ca='ASR listen')
 
     return msg
 #======================================================================================#
@@ -263,7 +247,7 @@ def makeCA_say_and_wait(etts_text, grammar, answer_id, language='es', image_url=
 
     msg = CA()
     msg.type = "robot_gives_info_and_waits"
-    msg.ca_name = str(time.time())
+    msg.ca_name = str(rospy.get_rostime().nsecs)
     msg.duration = duration
     msg.priority = priority
     msg.emitter = emitter
@@ -319,7 +303,7 @@ def makeCA_say_and_wait(etts_text, grammar, answer_id, language='es', image_url=
     msg.values.append(kvp)
     #=================#
 
-    rospy.logdebug("Creating CA say and wait")
+    rospy.logdebug("Creating CA say and wait %s" % msg.ca_name)
     
     return msg
 #======================================================================================#

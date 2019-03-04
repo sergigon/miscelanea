@@ -26,7 +26,7 @@ from interaction_msgs.msg import CA
 from hri_manager.key_value_pairs import to_dict
 
 # Local libraries
-from skillName.xml_reader import GetQuestion, GetExpression
+from skillName.xml_reader import XMLReader
 from skillName.ca_functions import *
 from skillName.exceptions_lib import PauseException, ErrorException
 
@@ -72,6 +72,9 @@ class SkillNameSkill(Skill):
 
         # Tablet paths
         #self._icons_path = 'image/weather/' # Icons path
+
+        # XMl reader
+        self._xml_reader = XMLReader(self._data_path)
 
         # SkillName variables
         #self.location, self.forecast_type, self.date = '', '', ''
@@ -164,7 +167,7 @@ class SkillNameSkill(Skill):
 
         # If actionlib server has not been initialized
         if not self._as:
-            self._as = actionlib.SimpleActionServer(skill_name, weather_skill.msg.WeatherAction, execute_cb=self.execute_cb, auto_start=False)
+            self._as = actionlib.SimpleActionServer(skill_name, skillName_skill.msg.SkillNameAction, execute_cb=self.execute_cb, auto_start=False)
             # start the action server
             self._as.start()
 
@@ -186,25 +189,41 @@ class SkillNameSkill(Skill):
 #=================================================================#
 
 ######################### Skill Functions #########################
+    def stop_etts(self): ## No modify ##
+        """
+        Stops active etts CA.
+        """
+
+        ca_info = makeCA_etts_info(etts_text='\\pause=10', emitter=self._emitter)
+        self.ca_pub.publish(ca_info)
+        ca_deactivation_msg = deactivateCA(ca_info.ca_name)
+        self.ca_deactivation_pub.publish(ca_deactivation_msg)
+
     def deactivate_ca_list(self): ## No modify ##
         """
         Deactivate all CAs in the list.
         """
 
-        for msg_name in self._list_ca:
+        for ca_name in self._list_ca:
             rospy.logdebug('Deactivating CA: %s' % ca_name)
             msg = deactivateCA(ca_name)
-            self.ca_deactivation_pub.publish(msg_name)
+            self.ca_deactivation_pub.publish(ca_name)
         self._list_ca = []
 
-    def update_list_ca(ca_list): ## No modify ##
-         """
+        # Stop etts
+        self.stop_etts()
+
+    def update_list_ca(self, list_ca): ## No modify ##
+        """
         Update the list of active CAs.
 
         @param ca_list: List of CAs.
         """
 
-        self._list_ca.append(ca_list)
+        for ca_name in list_ca:
+            rospy.logdebug('Adding CA: %s to CA list' % ca_name)
+        self._list_ca.append(list_ca)
+
 
     def wait_ca_finish(self, ca_name, max_time=60): ## No modify ##
         """
@@ -214,7 +233,7 @@ class SkillNameSkill(Skill):
         @param max_time: Max time to for the CA.
         """
 
-        print('Waiting CA %s to finish' % ca_name)
+        rospy.logdebug('Waiting CA %s to finish' % ca_name)
         t0, t1 = time.time(), time.time()
         #while(t1-t0<max_time and ca_finished):
         while(t1-t0<max_time):
@@ -222,7 +241,7 @@ class SkillNameSkill(Skill):
             self.exception_check()
             rospy.sleep(1)
             t1=time.time()
-        print('CA finished')
+        rospy.logdebug('CA finished')
 
     def wait_ca_answer(self, ca_info): ## No modify ##
         """
@@ -231,12 +250,13 @@ class SkillNameSkill(Skill):
         @param ca_info: CA message.
         """
 
-        print('Waiting CA %s response' % ca_name)
+        rospy.logdebug('Waiting CA %s response' % ca_info.ca_name)
+        values = to_dict(ca_info.values)
         t0, t1 = time.time(), time.time()
         while(self._answer_received == '' and t1-t0<(int(values['answer_time'])+4) * int(values['answer_attempts'])):
             rospy.sleep(1)
             t1=time.time()
-        print('Response received')
+        rospy.logdebug('Response received')
 
     def exception_check(self): ## No modify ##
         """
@@ -302,16 +322,16 @@ class SkillNameSkill(Skill):
         if(param_name == 'langauge'):
             try:
                 language = rospy.get_param(self._LANG_PARAM) # Get langauge
-            except:
+            except KeyError:
                 language = 'es'
                 rospy.logwarn("Language not found. Using language %s" % language)
-            return langauge
+            return language
 
         # Language
         if(param_name == 'user_name'):
             try:
                 user_name = rospy.get_param(self._USER_NAME_PARAM) # Get user name
-            except:
+            except KeyError:
                 user_name = ''
                 rospy.logwarn("User name not found. Using empty name")
             return user_name
@@ -372,15 +392,15 @@ class SkillNameSkill(Skill):
         self._number_plays = goal.number_plays
         
         # Check proactivity
-        if(goal.proactivity == 0):
-            self._time_question = 50 # Get time question
-        elif(goal.proactivity == 1):
-            self._time_question = 40
+        if(goal.proactivity == 1):
+            self._time_question = 120 # Get time question
         elif(goal.proactivity == 2):
-            self._time_question = 30
+            self._time_question = 90
         elif(goal.proactivity == 3):
-            self._time_question = 20
+            self._time_question = 60
         elif(goal.proactivity == 4):
+            self._time_question = 30
+        elif(goal.proactivity == 5):
             self._time_question = 10
         else:
             rospy.logerr('Proactivity level not specified')
@@ -409,7 +429,7 @@ class SkillNameSkill(Skill):
         """
         Callback of the node. Activated when a goal is received
 
-        @param goal: weather_skill goal.
+        @param goal: skillName_skill goal.
         """
 
         # Init skill variables
@@ -501,28 +521,23 @@ class SkillNameSkill(Skill):
                             # Asks when a time has passed
                             if(self._time_run > self._time_question * n_questions):
                                 # Continue question
-                                etts_text, grammar, answer_id = GetQuestion('exit', language, user_name)
+                                etts_text, grammar, answer_id = self._xml_reader.GetQuestion('continue', language, user_name)
                                 ca_info = makeCA_ASR_question(etts_text=etts_text, language=language, grammar = grammar, answer_id = answer_id, emitter=self._emitter)
                                 self.ca_pub.publish(ca_info)
-                                self.update_list_ca([ca_info])
+                                self.update_list_ca([ca_info.ca_name])
                                 # Wait answer
-                                t_ans_1, t_ans_0 = time.time(), time.time()
-                                values = to_dict(ca_info.values)
-                                while(self._answer_received == '' and t_ans_1-t_ans_0 < (int(values['answer_time'])+4) * int(values['answer_attempts'])):
-                                    rospy.logdebug('Waiting response...')
-                                    rospy.sleep(1)
-                                    t_ans_1 = time.time()
+                                self.wait_ca_answer(ca_info)
                                 # Answer received
                                 if(self._answer_received == 'si'): # Continue
                                     self._feedback.engagement = True
                                 elif(self._answer_received == 'no'): # Stops skill
                                     # Send CA info
-                                    etts_text, grammar, answer_id = GetExpression('exit', language, user_name)
-                                    ca_info = makeCA_etts_info(etts_text=etts_text, language=language, grammar=grammar, answer_id=answer_id, emitter=self._emitter)
+                                    etts_text, answer_id = self._xml_reader.GetExpression('exit', language, user_name)
+                                    ca_info = makeCA_etts_info(etts_text=etts_text, language=language, emitter=self._emitter)
                                     self.ca_pub.publish(ca_info)
-                                    self.update_list_ca([ca_info])
+                                    self.update_list_ca([ca_info.ca_name])
                                     # Wait finish CA
-                                    self.wait_ca_finish(etts_ca_name, max_time=60)
+                                    self.wait_ca_finish(ca_info.ca_name, max_time=5)
                                     raise ActionlibException # Cancel the goal
                                 else: # Continue but changes engagement
                                     self._feedback.engagement = False
