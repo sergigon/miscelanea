@@ -55,8 +55,7 @@ class XMLReader():
 		etts = question.find('etts').text
 		etts = etts.encode("utf-8")
 		etts = etts.replace('%name', name) # Introduce the user's name
-		answer_id = question.find('answer_id').text
 
-		print ('Question: %s\nAnswer id: %s' % (etts, answer_id))
+		print ('Expression: %s' % (etts))
 
-		return etts, answer_id
+		return etts

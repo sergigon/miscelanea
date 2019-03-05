@@ -533,7 +533,7 @@ class SkillNameSkill(Skill):
                                     self._feedback.engagement = True
                                 elif(self._answer_received == 'no'): # Stops skill
                                     # Send CA info
-                                    etts_text, answer_id = self._xml_reader.GetExpression('exit', language, user_name)
+                                    etts_text = self._xml_reader.GetExpression('exit', language, user_name)
                                     ca_info = makeCA_etts_info(etts_text=etts_text, language=language, emitter=self._emitter)
                                     self.ca_pub.publish(ca_info)
                                     self.update_list_ca([ca_info.ca_name])
