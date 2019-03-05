@@ -129,9 +129,11 @@ class SkillNameSkill(Skill):
         Modify the variable self._pause if goal is being handled, when a pause is requested.
         """
 
-        if(self._goal_exec): # Goal being handled
+        if(self._goal_exec and not self._pause): # Goal being handled and not in pause
             self._pause_requested = True
             rospy.logdebug('Pause requested')
+        elif(self._pause):
+            rospy.logdebug('Already in pause')
         else: # Goal NOT being handled
             rospy.logwarn('Goal not being handled')
 
