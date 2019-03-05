@@ -205,9 +205,8 @@ class SkillNameSkill(Skill):
         """
 
         for ca_name in self._list_ca:
-            rospy.logdebug('Deactivating CA: %s' % ca_name)
             msg = deactivateCA(ca_name)
-            self.ca_deactivation_pub.publish(ca_name)
+            self.ca_deactivation_pub.publish(msg)
         self._list_ca = []
 
         # Stop etts
@@ -222,7 +221,7 @@ class SkillNameSkill(Skill):
 
         for ca_name in list_ca:
             rospy.logdebug('Adding CA: %s to CA list' % ca_name)
-        self._list_ca.append(list_ca)
+        self._list_ca.extend(list_ca)
 
 
     def wait_ca_finish(self, ca_name, max_time=60): ## No modify ##
@@ -327,8 +326,8 @@ class SkillNameSkill(Skill):
                 rospy.logwarn("Language not found. Using language %s" % language)
             return language
 
-        # Language
-        if(param_name == 'user_name'):
+        # User name
+        elif(param_name == 'user_name'):
             try:
                 user_name = rospy.get_param(self._USER_NAME_PARAM) # Get user name
             except KeyError:
@@ -537,7 +536,7 @@ class SkillNameSkill(Skill):
                                     self.ca_pub.publish(ca_info)
                                     self.update_list_ca([ca_info.ca_name])
                                     # Wait finish CA
-                                    self.wait_ca_finish(ca_info.ca_name, max_time=5)
+                                    self.wait_ca_finish(ca_info.ca_name, max_time=7)
                                     raise ActionlibException # Cancel the goal
                                 else: # Continue but changes engagement
                                     self._feedback.engagement = False
