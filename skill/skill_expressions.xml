@@ -5,11 +5,11 @@
 
 	<expression type="exit">
 		<language type="es">
-			<etts>Vale, \\pause=600 lo dejamos | Okey, \\pause=600 paramos ya</etts>
+			<etts>Vale \\pause=600 lo dejamos | Okey \\pause=600 paramos ya</etts>
 		</language>
 
 		<language type="en">
-			<etts>Okey, \\pause=600 we leave it | Okey, \\pause=600 we stop</etts>
+			<etts>Okey \\pause=600 we leave it | Okey \\pause=600 we stop</etts>
 		</language>
 	</expression>
 
