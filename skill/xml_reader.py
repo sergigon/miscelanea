@@ -22,8 +22,8 @@ class XMLReader():
 
 	def GetQuestion(self, question_type, language, name=''):
 		"""
-		@brief: Get a question from 'skill_question.xml'
-		@param string question_type: kind of question
+		@brief: Get a question from 'skill_questions.xml'
+		@param string question_type: kind of question.
 		"""
 		tree = ET.parse(self._expressions_path + 'skill_questions.xml') # Read xml file
 		root = tree.getroot() # Make a tree with the data
@@ -41,18 +41,18 @@ class XMLReader():
 
 		return etts, grammar, answer_id
 
-	def GetExpression(self, question_type, language, name=''):
+	def GetExpression(self, expression_type, language, name=''):
 		"""
-		@brief: Get a question from 'skill_question.xml'
-		@param string question_type: kind of question
+		@brief: Get a expression from 'skill_expression.xml'
+		@param string expression_type: kind of expression.
 		"""
 		tree = ET.parse(self._expressions_path + 'skill_expressions.xml') # Read xml file
 		root = tree.getroot() # Make a tree with the data
-		question_info_path = "expression/[@type='" + question_type + "']/language/[@type='" + language + "']"
+		expression_info_path = "expression/[@type='" + expression_type + "']/language/[@type='" + language + "']"
 
 		# Save data
-		question = root.find(question_info_path) # Find the question type
-		etts = question.find('etts').text
+		expression = root.find(expression_info_path) # Find the expression type
+		etts = expression.find('etts').text
 		etts = etts.encode("utf-8")
 		etts = etts.replace('%name', name) # Introduce the user's name
 

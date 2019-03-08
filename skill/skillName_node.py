@@ -196,6 +196,7 @@ class SkillNameSkill(Skill):
         Stops active etts CA.
         """
 
+        rospy.logdebug('Stop etts')
         ca_info = makeCA_etts_info(etts_text='\\pause=10', emitter=self._emitter)
         self.ca_pub.publish(ca_info)
         ca_deactivation_msg = deactivateCA(ca_info.ca_name)
@@ -522,6 +523,7 @@ class SkillNameSkill(Skill):
                             # Asks when a time has passed
                             if(self._time_run > self._time_question * n_questions):
                                 # Continue question
+                                rospy.loginfo('Asking to continue')
                                 etts_text, grammar, answer_id = self._xml_reader.GetQuestion('continue', language, user_name)
                                 ca_info = makeCA_ASR_question(etts_text=etts_text, language=language, grammar = grammar, answer_id = answer_id, emitter=self._emitter)
                                 self.ca_pub.publish(ca_info)
