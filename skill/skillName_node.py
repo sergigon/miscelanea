@@ -594,7 +594,7 @@ class SkillNameSkill(Skill):
         else:
             rospy.logwarn("STOPPED")
             rospy.logwarn("Cannot send a goal when the skill is stopped")
-            self._result.skill_result = self._result.FAIL # Error
+            self._result.skill_result = self._result.FAIL # Fail
         #==========================================================#
         
         #### Result and feedback sending and goal status update ####

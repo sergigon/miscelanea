@@ -1,0 +1,117 @@
+############################################################
+robot_giving_info
+############################################################
+
+header: 
+  seq: 5
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+ca_name: "ca_11111111111111111"
+emitter: "test_node"
+result: "succeeded"
+values: []
+
+
+############################################################
+question
+############################################################
++ No response:
+
+header: 
+  seq: 2
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+ca_name: "ca_11111111111111111"
+emitter: "test_node"
+result: "succeeded"
+values: 
+  - 
+    key: "answer_id"
+    value: "sino"
+  - 
+    key: "answer_time"
+    value: "10|10"
+  - 
+    key: "answer_value"
+    value: "no_response"
+  - 
+    key: "communication_failures"
+    value: "0"
+  - 
+    key: "failed_answers"
+    value: "0"
+  - 
+    key: "no_responses"
+    value: "2"
+------------------------
++ Response
+
+header: 
+  seq: 3
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+ca_name: "ca_11111111111111111"
+emitter: "test_node"
+result: "succeeded"
+values: 
+  - 
+    key: "answer_id"
+    value: "sino"
+  - 
+    key: "answer_time"
+    value: "7.0059800148"
+  - 
+    key: "answer_type"
+    value: "ASR"
+  - 
+    key: "answer_value"
+    value: "si"
+  - 
+    key: "communication_failures"
+    value: "0"
+  - 
+    key: "failed_answers"
+    value: "0"
+  - 
+    key: "no_responses"
+    value: "0"
+-------------------------
++ No response|Response
+
+header: 
+  seq: 4
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: ''
+ca_name: "ca_11111111111111111"
+emitter: "test_node"
+result: "succeeded"
+values: 
+  - 
+    key: "answer_id"
+    value: "sino"
+  - 
+    key: "answer_time"
+    value: "10|4.00405883789"
+  - 
+    key: "answer_type"
+    value: "ASR"
+  - 
+    key: "answer_value"
+    value: "si"
+  - 
+    key: "communication_failures"
+    value: "0"
+  - 
+    key: "failed_answers"
+    value: "0"
+  - 
+    key: "no_responses"
+    value: "1"
